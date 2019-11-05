@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">EXtreme Controller</string>
+    <string name="title_activity_hde_link">HDeLinkActivity</string>
+    <string name="Button_Start_Text">启动</string>
+    <string name="连接蓝牙">连接蓝牙</string>
+    <string name="连接热点">连接热点</string>
+    <string name="结束">结束</string>
+    <string name="speed_00_radius_66666">speed:00, radius:66666</string>
 </resources>
