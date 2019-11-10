@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.hardware.camera2.CameraManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -41,7 +42,14 @@ public class MainActivity extends AppCompatActivity {
     private String BT="Bluetooth";
 
     private String TAG="Main Activity";
+    /**
+     * here starts camera part
+     */
+    //private CameraManager cameraManager= (CameraManager) this.getSystemService(Context.CAMERA_SERVICE);
 
+    /**
+     * camera part end
+     */
     private void measure(){//这个函数用来获得屏幕尺寸
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
