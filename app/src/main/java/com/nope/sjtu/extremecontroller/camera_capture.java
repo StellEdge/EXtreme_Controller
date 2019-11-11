@@ -6,6 +6,7 @@ package com.nope.sjtu.extremecontroller;
  */
 
 import android.content.Context;
+import android.graphics.Camera;
 import android.hardware.camera2.*;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -24,6 +25,7 @@ public class camera_capture {
 
     public  CameraDevice mCameraDevice;
     private CameraManager mCameraManager;
+    private Camera mCamera;
     public camera_capture(Activity activity){
         mCameraManager= (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         //if (mCameraManager ==null)
@@ -52,6 +54,11 @@ public class camera_capture {
         }
         return null;
     }
+    public Camera openCamera(){
+
+    }
+
+
     private CameraDevice.StateCallback cameraCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(CameraDevice camera) {
