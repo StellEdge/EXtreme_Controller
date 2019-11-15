@@ -8,7 +8,10 @@ package com.nope.sjtu.extremecontroller;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.*;
+import android.graphics.BitmapFactory;
 import android.graphics.Camera;
+import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -16,6 +19,10 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
+
+
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.app.ActivityCompat;
@@ -26,17 +33,21 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.graphics.SurfaceTexture;
 
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
+
 
 public class camera_capture {
     private static final String TAG = "Camera Service";
     private Camera mCamera;
     private CameraDevice mCameraDevice;
+    private String mCameraId;
+
     private TextureView mTextureView;
     private Size previewSize;
     private CaptureRequest.Builder mPreviewBuilder;
+    private ImageReader mImageReader;
+    //private OnGetBitmapInterface mOnGetBitmapInterface;
 
     private HandlerThread mhandlerThread;
     private Handler mHandler;  //for async access
@@ -81,6 +92,10 @@ public class camera_capture {
             surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
             Surface previewSurface = new Surface(surfaceTexture);
             try {
+                mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                //There it supports multi putput target
+                mPreviewBuilder.addTarget(previewSurface);
+                //mPreviewBuilder.addTarget(mImageReader.getSurface());
                 mCameraDevice.createCaptureSession(Arrays.asList(previewSurface), mCameraCaptureSessionStateCallBack , mHandler);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
@@ -151,7 +166,6 @@ public class camera_capture {
 
     public void openCamera(int view_width,int view_height) {
         CameraManager mCameraManager = (CameraManager) callingActivity.getSystemService(Context.CAMERA_SERVICE);
-        String mCameraId=null;
         try {
             if (ActivityCompat.checkSelfPermission(callingActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
@@ -181,10 +195,39 @@ public class camera_capture {
             }
             //open camera here if succeeded
             mCameraManager.openCamera(mCameraId,mCameraDeviceStateCallback, mHandler);
+            mImageReader = ImageReader.newInstance(previewSize.getWidth(), previewSize.getHeight(),
+                    ImageFormat.JPEG, 2);
+            mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mHandler);
         } catch (CameraAccessException e){
             e.printStackTrace();
             return;
         }
+    }
+
+    private ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            Image image = reader.acquireLatestImage();
+            //因为是ImageFormat.JPEG格式，所以 image.getPlanes()返回的数组只有一个，也就是第0个。
+            ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
+            byte[] bytes = new byte[byteBuffer.remaining()];
+            byteBuffer.get(bytes);
+            //JPEG to bitmap
+            Bitmap temp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            //因为摄像机数据默认是横的，所以需要旋转90度。
+            Bitmap newBitmap = rotate(temp, 90);
+            //抛出去展示或存储。
+            Log.d(TAG,"New data ready");
+            //一定需要close，否则不会收到新的Image回调。
+            image.close();
+        }
+    };
+
+    private static Bitmap rotate(Bitmap bitmap, int angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
+                bitmap.getHeight(), matrix, true);
     }
 
     public void closeCamera() {

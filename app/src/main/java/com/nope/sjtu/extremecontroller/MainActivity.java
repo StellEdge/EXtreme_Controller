@@ -17,6 +17,7 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -58,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
     };
     private TextView teller;
     public Axis axis;
+    private TextureView cam_preview;
+    private camera_capture cam_cap;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +103,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         measure();
+
+        cam_preview=findViewById(R.id.camera_preview);
+        cam_cap=new camera_capture(this);
+        cam_cap.initTexture(cam_preview);
     }
 
     private Handler mhandler = new Handler(){
