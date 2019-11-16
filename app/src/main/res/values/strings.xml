@@ -6,4 +6,8 @@
     <string name="连接热点">连接热点</string>
     <string name="结束">结束</string>
     <string name="speed_00_radius_66666">speed:00, radius:66666</string>
+    <string name="scan">SCAN</string>
+    <string name="link">LINK</string>
+    <string name="empty">empty</string>
+    <string name="select">select</string>
 </resources>

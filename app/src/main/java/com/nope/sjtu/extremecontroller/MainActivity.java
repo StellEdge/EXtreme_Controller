@@ -1,6 +1,7 @@
 package com.nope.sjtu.extremecontroller;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,9 +10,12 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.camera2.CameraManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -20,13 +24,22 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.Math;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.floor;
 
 public class MainActivity extends AppCompatActivity {
     int widthPixels;//屏幕尺寸
@@ -43,6 +56,11 @@ public class MainActivity extends AppCompatActivity {
     private String BT="Bluetooth";
 
     private String TAG="Main Activity";
+    private static Handler serverHandler=new Handler();
+    private byte flag=(byte)0xee;
+    private DataInputStream in;
+    private DataOutputStream out;
+    private Socket client;
     /**
      * here starts camera part
      */
@@ -58,13 +76,50 @@ public class MainActivity extends AppCompatActivity {
         this.heightPixels = metrics.heightPixels;
     };
     private TextView teller;
+    private TextView msg;
+    private TextView test_msg;
     public Axis axis;
     private TextureView cam_preview;
     private camera_capture cam_cap;
+    private boolean isServer=true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final String[] single_list={"server","client"};
+
+        Button button_select=findViewById(R.id.button_select);
+        button_select.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setIcon(R.mipmap.ic_launcher)
+                        .setSingleChoiceItems(single_list, 0, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if(i==0)
+                                    isServer=true;
+                                else
+                                    isServer=false;
+                                if(!isServer){
+                                    Log.d("change","to client");
+                                    Intent intent=new Intent(MainActivity.this,ClientActivity.class);
+                                    startActivity(intent);
+                                    return;
+                                }
+                            }
+                        })
+                        .setPositiveButton("确认",new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //dialogInterface.dismiss();
+                            }
+                        }).create().show();
+
+            }
+        });
+
         //paintBoard = new PaintBoard(this);
         canvas = new Canvas();
         axis = findViewById(R.id.axis);
@@ -88,6 +143,39 @@ public class MainActivity extends AppCompatActivity {
         teller = (TextView)findViewById(R.id.teller);
         teller.setText("temp");
         Button button_start = findViewById(R.id.button_start);
+        button_start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final EditText editCommand = new EditText(MainActivity.this);
+                new AlertDialog.Builder(MainActivity.this)
+                        .setView(editCommand).setTitle("send command")
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                final String txt = editCommand.getText().toString();
+                                new Thread() {
+                                    public void run() {
+                                        try {
+                                            out.writeByte(flag);
+                                            out.writeLong(txt.getBytes().length);
+                                            out.write(txt.getBytes());
+                                        } catch (Exception e) { e.printStackTrace(); }
+                                    }
+                                }.start();
+                            }
+                        }).create().show();
+//                new Thread(){
+//                    public void run(){
+//                        try{
+//                            String txt="test";
+//                            out.writeByte(flag);
+//                            out.writeLong(txt.getBytes().length);
+//                            out.write(txt.getBytes());
+//                        }catch (Exception e){e.printStackTrace();}
+//                    }
+//                }.start();
+            }
+        });
         //TODO:四个按钮的监听函数
         Button button_bluetooth = findViewById(R.id.button_bluetooth);
         button_bluetooth.setOnClickListener(new View.OnClickListener() {
@@ -102,6 +190,86 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        Button button_wifi=findViewById(R.id.button_wifi);
+        button_wifi.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                Intent intent=new Intent(MainActivity.this,WifiList.class);
+                startActivity(intent);
+            }
+        });
+
+        //传输信息：起始标志flag 1byte，长度long，最后是数据byte[]
+        //下面是局域网传输数据
+        msg=findViewById(R.id.msg);
+        test_msg=findViewById(R.id.test_msg);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                WifiManager mWifiManager=(WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                final int ip_int=mWifiManager.getConnectionInfo().getIpAddress();
+                final String ip=ipTrans(ip_int);
+                //System.out.println("new thread "+ip);
+                serverHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String show=ip+"\n int:"+Integer.toString(ip_int)+"\n port:12345";
+                        msg.setText(show);
+                    }
+                });
+                try{
+                    final ServerSocket server=new ServerSocket(12345);
+                    client=null;
+                    while(client==null){
+                        client=server.accept();
+                    }
+                    in=new DataInputStream(client.getInputStream());
+                    out=new DataOutputStream(client.getOutputStream());
+                    serverHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            test_msg.setText("connect");
+                        }
+                    });
+                    while(true){
+                        if(in.readByte()==flag){
+                            long len=in.readLong();
+                            byte[] msg=new byte[(int)len];
+                            in.read(msg);
+                            //下面测试用，正式使用时可删去
+                            final String s=new String(msg);
+                            serverHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    String tmp=test_msg.getText().toString();
+                                    tmp+="\n"+s;
+                                    test_msg.setText(tmp);
+                                }
+                            });
+                            if(msg.equals("break")){
+                                in.close();
+                                client.close();
+                                break;
+                            }
+                        }
+                    }
+                }catch (Exception e){e.printStackTrace();}
+
+
+            }
+            public String ipTrans(int a){
+                String res="";
+                res+=a&0xFF;
+                res+=".";
+                res+=(a>>8)&0xFF;
+                res+=".";
+                res+=(a>>16)&0xFF;
+                res+=".";
+                res+=(a>>24)&0xFF;
+                return res;
+            }
+        }).start();
+
         measure();
 
         cam_preview=findViewById(R.id.camera_preview);
