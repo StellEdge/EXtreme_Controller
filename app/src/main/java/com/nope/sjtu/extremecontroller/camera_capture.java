@@ -33,6 +33,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.graphics.SurfaceTexture;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -215,6 +216,14 @@ public class camera_capture {
             //JPEG to bitmap
             Bitmap temp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             //因为摄像机数据默认是横的，所以需要旋转90度。
+            byte[] outdata = transImage(temp, 848, 480);
+            int length = outdata.length;
+
+            //out.write((byte) 0xA0);
+            //out.write(intTOBytes(datalen));
+            //out.write(outdata, 0, datalen);
+
+
             Bitmap newBitmap = rotate(temp, 90);
             //抛出去展示或存储。
             Log.d(TAG,"New data ready");
@@ -222,6 +231,44 @@ public class camera_capture {
             image.close();
         }
     };
+
+    private byte[] transImage(Bitmap bitmap, int width, int height) {
+        try {
+            int bitmapWidth = bitmap.getWidth();
+            int bitmapHeight = bitmap.getHeight();
+
+            float scaleWidth = (float) width / bitmapWidth;
+            float scaleHeight = (float) height / bitmapHeight;
+            Matrix matrix = new Matrix();
+            matrix.postScale(scaleWidth, scaleHeight);
+            //Resize
+            Bitmap resizeBitemp = Bitmap.createBitmap(bitmap, 0, 0, bitmapWidth, bitmapHeight, matrix, false);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            resizeBitemp.compress(Bitmap.CompressFormat.JPEG, 85, outputStream);
+            byte[] byteArray = outputStream.toByteArray();
+            outputStream.close();
+            if (!bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
+            if (!resizeBitemp.isRecycled()) {
+                resizeBitemp.recycle();
+            }
+            return byteArray;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    private byte[] intTOBytes(int value){
+        //Log.e("cam",value+"d");
+        byte[] src = new byte[4];
+        src[3] = (byte) ((value >> 24) & 0xFF);
+        src[2] = (byte)((value >> 16) & 0xFF);
+        src[1] = (byte)((value >> 8) & 0xFF);
+        src[0] = (byte)(value & 0xFF);
+        return src;
+    }
 
     private static Bitmap rotate(Bitmap bitmap, int angle) {
         Matrix matrix = new Matrix();
