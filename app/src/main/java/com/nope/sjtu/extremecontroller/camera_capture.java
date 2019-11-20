@@ -53,6 +53,15 @@ public class camera_capture {
     private HandlerThread mhandlerThread;
     private Handler mHandler;  //for async access
     private Activity callingActivity;
+    public byte[] image_data;
+    public interface OnImageDataReadyListener {
+        public void OnImageDataReady(byte[] data);
+    }
+    private OnImageDataReadyListener mOnImageDataReadyListener;
+    public void setOnImageDataReadyListener(OnImageDataReadyListener onImageDataReadyListener) {
+        mOnImageDataReadyListener = onImageDataReadyListener;
+    }
+
     public camera_capture(Activity activity) {
 
         //handler setting
@@ -96,8 +105,8 @@ public class camera_capture {
                 mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                 //There it supports multi putput target
                 mPreviewBuilder.addTarget(previewSurface);
-                //mPreviewBuilder.addTarget(mImageReader.getSurface());
-                mCameraDevice.createCaptureSession(Arrays.asList(previewSurface), mCameraCaptureSessionStateCallBack , mHandler);
+                mPreviewBuilder.addTarget(mImageReader.getSurface());
+                mCameraDevice.createCaptureSession(Arrays.asList(previewSurface,mImageReader.getSurface()), mCameraCaptureSessionStateCallBack , mHandler);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -195,10 +204,12 @@ public class camera_capture {
 
             }
             //open camera here if succeeded
-            mCameraManager.openCamera(mCameraId,mCameraDeviceStateCallback, mHandler);
             mImageReader = ImageReader.newInstance(previewSize.getWidth(), previewSize.getHeight(),
                     ImageFormat.JPEG, 2);
             mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mHandler);
+
+            mCameraManager.openCamera(mCameraId,mCameraDeviceStateCallback, mHandler);
+
         } catch (CameraAccessException e){
             e.printStackTrace();
             return;
@@ -216,17 +227,20 @@ public class camera_capture {
             //JPEG to bitmap
             Bitmap temp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             //因为摄像机数据默认是横的，所以需要旋转90度。
-            byte[] outdata = transImage(temp, 848, 480);
+            Bitmap newBitmap = rotate(temp, 90);
+            byte[] outdata = transImage(newBitmap, 848, 480);
             int length = outdata.length;
 
             //out.write((byte) 0xA0);
             //out.write(intTOBytes(datalen));
             //out.write(outdata, 0, datalen);
+            //mHandler.sendMessage(mHandler.obtainMessage(1,outdata));
+            if(mOnImageDataReadyListener!=null){
+                mOnImageDataReadyListener.OnImageDataReady(outdata);
+            }
 
-
-            Bitmap newBitmap = rotate(temp, 90);
             //抛出去展示或存储。
-            Log.d(TAG,"New data ready");
+            //Log.d(TAG,"New data ready");
             //一定需要close，否则不会收到新的Image回调。
             image.close();
         }

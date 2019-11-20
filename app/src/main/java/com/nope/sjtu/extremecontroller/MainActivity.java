@@ -199,6 +199,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //获得图像信息的方法：mOnImageDataReadyListener 事件回调
+        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
+            @Override
+            public void OnImageDataReady(byte[] data) {
+                //在这里写传出用的代码。
+            }
+        });
+
+
         //传输信息：起始标志flag 1byte，长度long，最后是数据byte[]
         //下面是局域网传输数据
         msg=findViewById(R.id.msg);
@@ -281,7 +290,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg){
             super.handleMessage(msg);
-            teller.setText((String)msg.obj);
+            switch(msg.what){
+                case 1:{
+                    Log.d("CAMERA","New image ready.");
+                }
+                case 0: {
+                    teller.setText((String) msg.obj);
+                }
+            }
         }
     };
 
@@ -309,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     @Override
-    public boolean onTouchEvent(MotionEvent event) {//李桐：触摸监听，更新mlocation中的坐标
+    public boolean onTouchEvent(MotionEvent event) {
         switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
@@ -330,7 +346,6 @@ public class MainActivity extends AppCompatActivity {
 
         calculate(mlocation);
         BluetoothSend(" ",CirSend(this.speed, this.radius));
-        //李桐：这里是给蓝牙传输，tag我用了空字符串
         return true;
     }
 
@@ -448,6 +463,7 @@ public class MainActivity extends AppCompatActivity {
                     temp = "speed:" + speed + ", radius:" + radius;}
                 Log.d("hello", temp);
                 mhandler.sendMessage(mhandler.obtainMessage(0,temp));
+                //这里的操作是为了节约构造对象的内存开销
                 /*try {
                     Thread.sleep(1);
                 } catch (InterruptedException e) {
