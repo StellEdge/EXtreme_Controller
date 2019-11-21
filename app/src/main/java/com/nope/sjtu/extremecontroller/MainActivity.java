@@ -199,15 +199,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //获得图像信息的方法：mOnImageDataReadyListener 事件回调
-        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
-            @Override
-            public void OnImageDataReady(byte[] data) {
-                //在这里写传出用的代码。
-            }
-        });
-
-
         //传输信息：起始标志flag 1byte，长度long，最后是数据byte[]
         //下面是局域网传输数据
         msg=findViewById(R.id.msg);
@@ -284,6 +275,14 @@ public class MainActivity extends AppCompatActivity {
         cam_preview=findViewById(R.id.camera_preview);
         cam_cap=new camera_capture(this);
         cam_cap.initTexture(cam_preview);
+        //获得图像信息的方法：mOnImageDataReadyListener 事件回调
+        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
+            @Override
+            public void OnImageDataReady(byte[] data) {
+                //在这里写传出用的代码。
+            }
+        });
+
     }
 
     private Handler mhandler = new Handler(){
