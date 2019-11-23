@@ -39,4 +39,14 @@
         android:text="发送"
         />
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextureView
+            android:id="@+id/camera_preview"
+            android:layout_width="212dp"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+
 </LinearLayout>

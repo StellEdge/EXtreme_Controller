@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -42,6 +44,9 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
 
     public Handler testHandler=new Handler();
 
+    private camera_capture cam_cap;
+    private TextureView cam_preview;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +68,7 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
                 hasSet=true;
             }
         });
+
 
         //当程序一开始运行的时候就实例化Socket对象,与服务端进行连接,获取输入输出流
         //因为4.0以后不能再主线程中进行网络操作,所以需要另外开辟一个线程
@@ -123,7 +129,17 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
                 }.start();
             }
         });
-
+        cam_preview=findViewById(R.id.camera_preview);
+        cam_cap=new camera_capture(this);
+        cam_cap.initTexture(cam_preview);
+        //获得图像信息的方法：mOnImageDataReadyListener 事件回调
+        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
+            @Override
+            public void OnImageDataReady(byte[] data) {
+                //在这里写传出用的代码。
+                Log.d("CLIENT","Image ready");
+            }
+        });
 
         //new Thread(ClientActivity.this).start();
     }
