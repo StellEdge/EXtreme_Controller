@@ -3,6 +3,7 @@ package com.nope.sjtu.extremecontroller;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView test_msg;
     public Axis axis;
     private TextureView cam_preview;
+    private TextureView cam_receive;
     private camera_capture cam_cap;
     private boolean isServer=true;
     @Override
@@ -238,12 +240,24 @@ public class MainActivity extends AppCompatActivity {
                             in.read(msg);
                             //下面测试用，正式使用时可删去
                             final String s=new String(msg);
+                            final byte[] buffer=msg;
                             serverHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
                                     String tmp=test_msg.getText().toString();
                                     tmp+="\n"+s;
                                     test_msg.setText(tmp);
+
+                                    //图像处理部分
+                                    Bitmap img=BitmapUtils.BytestoBitmap(buffer,null);
+                                    final Canvas canvas = cam_receive.lockCanvas(null);
+                                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);// 清空画布
+                                    Paint paint = new Paint();
+                                    Rect src = new Rect(0, 0, img.getWidth(), img.getHeight());
+                                    Rect dst = new Rect(0, 0, canvas.getWidth(), img.getHeight() * canvas.getWidth() / img.getWidth());
+                                    canvas.drawBitmap(img, src, dst, paint);//将bitmap画到画布上
+                                    cam_receive.unlockCanvasAndPost(canvas);//解锁画布同时提交
+
                                 }
                             });
                             if(msg.equals("break")){
@@ -282,6 +296,9 @@ public class MainActivity extends AppCompatActivity {
                 //在这里写传出用的代码。
             }
         });
+
+        cam_receive=findViewById(R.id.camera_receive);
+        
 
     }
 
