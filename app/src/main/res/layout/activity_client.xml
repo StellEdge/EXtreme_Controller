@@ -40,17 +40,13 @@
         />
 
     <RelativeLayout
-        android:layout_width="212dp"
-        android:layout_height="120dp"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@+id/button_wifi"
-        android:layout_marginEnd="75dp">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <TextureView
-            android:id="@+id/client_camera_preview"
-            android:layout_width="424dp"
-            android:layout_height="240dp"
-            android:layout_alignParentBottom="true" />
+            android:id="@+id/camera_preview"
+            android:layout_width="212dp"
+            android:layout_height="wrap_content" />
     </RelativeLayout>
 
 </LinearLayout>

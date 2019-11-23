@@ -5,6 +5,7 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.TextureView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,13 +38,14 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
     private byte content;
     private byte flag=(byte)0xee;//起始标志
     private StringBuilder sb = null;
-    private TextureView cam_preview;
-    private camera_capture cam_cap;
 
     //定义一个handler对象,用来刷新界面
     public Handler handler = new Handler();
 
     public Handler testHandler=new Handler();
+
+    private camera_capture cam_cap;
+    private TextureView cam_preview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,26 +111,6 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
             }
         }.start();
 
-        cam_preview=findViewById(R.id.client_camera_preview);
-        cam_cap=new camera_capture(ClientActivity.this);
-        cam_cap.initTexture(cam_preview);
-        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
-            @Override
-            public void OnImageDataReady(final byte[] data) {
-                new Thread(){
-                    public void run(){
-                        try{
-                            long len=data.length;
-                            out.writeByte(flag);
-                            out.writeLong(len);
-                            out.write(data);
-                        }catch (Exception e){e.printStackTrace();}
-                    }
-                }.start();
-            }
-        });
-
-
         btnsend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -146,7 +128,17 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
                 }.start();
             }
         });
-
+        cam_preview=findViewById(R.id.camera_preview);
+        cam_cap=new camera_capture(this);
+        cam_cap.initTexture(cam_preview);
+        //获得图像信息的方法：mOnImageDataReadyListener 事件回调
+        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
+            @Override
+            public void OnImageDataReady(byte[] data) {
+                //在这里写传出用的代码。
+                Log.d("CLIENT","Image ready");
+            }
+        });
 
         //new Thread(ClientActivity.this).start();
     }

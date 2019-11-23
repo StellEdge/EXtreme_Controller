@@ -130,18 +130,28 @@
         android:textSize="18sp" />
 
     <RelativeLayout
+        android:id="@+id/relativeLayout"
         android:layout_width="212dp"
-        android:layout_height="120dp"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@+id/button_wifi"
-        android:layout_marginEnd="75dp">
+        android:layout_height="240dp"
+        android:layout_alignBottom="@+id/image_ring"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="9dp">
 
         <TextureView
             android:id="@+id/camera_preview"
-            android:layout_width="424dp"
-            android:layout_height="240dp"
+            android:layout_width="212dp"
+            android:layout_height="120dp"
             android:layout_alignParentBottom="true" />
+
+        <TextureView
+            android:id="@+id/camera_receive"
+            android:layout_width="212dp"
+            android:layout_height="120dp"
+            android:layout_alignParentTop="true" />
+
     </RelativeLayout>
+
+
 
 
 </RelativeLayout>
