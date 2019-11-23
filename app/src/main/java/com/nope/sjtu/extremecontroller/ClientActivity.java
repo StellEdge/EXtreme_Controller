@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,6 +37,8 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
     private byte content;
     private byte flag=(byte)0xee;//起始标志
     private StringBuilder sb = null;
+    private TextureView cam_preview;
+    private camera_capture cam_cap;
 
     //定义一个handler对象,用来刷新界面
     public Handler handler = new Handler();
@@ -105,6 +108,26 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
                 }
             }
         }.start();
+
+        cam_preview=findViewById(R.id.client_camera_preview);
+        cam_cap=new camera_capture(ClientActivity.this);
+        cam_cap.initTexture(cam_preview);
+        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
+            @Override
+            public void OnImageDataReady(final byte[] data) {
+                new Thread(){
+                    public void run(){
+                        try{
+                            long len=data.length;
+                            out.writeByte(flag);
+                            out.writeLong(len);
+                            out.write(data);
+                        }catch (Exception e){e.printStackTrace();}
+                    }
+                }.start();
+            }
+        });
+
 
         btnsend.setOnClickListener(new View.OnClickListener() {
             @Override
