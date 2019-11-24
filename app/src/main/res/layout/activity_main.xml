@@ -60,16 +60,6 @@
         android:background="@drawable/button1"
         android:text="@string/结束" />
 
-    <!--选择client还是server-->
-    <Button
-        android:id="@+id/button_select"
-        android:layout_width="150dp"
-        android:layout_height="75dp"
-        android:layout_below="@+id/button_end"
-        android:layout_alignParentEnd="true"
-        android:background="@drawable/button1"
-        android:text="@string/select" />
-
     <!--背景-->
     <ImageView
         android:id="@+id/image_background"
@@ -124,7 +114,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/teller"
-        android:layout_toStartOf="@id/button_select"
+        android:layout_toStartOf="@id/button_end"
         android:text="no news"
         android:textColor="@android:color/background_dark"
         android:textSize="18sp" />

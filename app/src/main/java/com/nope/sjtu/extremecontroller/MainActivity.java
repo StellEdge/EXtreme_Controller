@@ -84,44 +84,10 @@ public class MainActivity extends AppCompatActivity {
     private TextureView cam_preview;
     private TextureView cam_receive;
     private camera_capture cam_cap;
-    private boolean isServer=true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        final String[] single_list={"server","client"};
-
-        Button button_select=findViewById(R.id.button_select);
-        button_select.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                new AlertDialog.Builder(MainActivity.this)
-                        .setIcon(R.mipmap.ic_launcher)
-                        .setSingleChoiceItems(single_list, 0, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                if(i==0)
-                                    isServer=true;
-                                else
-                                    isServer=false;
-                                if(!isServer){
-                                    Log.d("change","to client");
-                                    Intent intent=new Intent(MainActivity.this,ClientActivity.class);
-                                    startActivity(intent);
-                                    return;
-                                }
-                            }
-                        })
-                        .setPositiveButton("确认",new DialogInterface.OnClickListener(){
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                //dialogInterface.dismiss();
-                            }
-                        }).create().show();
-
-            }
-        });
 
         //paintBoard = new PaintBoard(this);
         canvas = new Canvas();
@@ -134,34 +100,7 @@ public class MainActivity extends AppCompatActivity {
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final EditText editCommand = new EditText(MainActivity.this);
-                new AlertDialog.Builder(MainActivity.this)
-                        .setView(editCommand).setTitle("send command")
-                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                final String txt = editCommand.getText().toString();
-                                new Thread() {
-                                    public void run() {
-                                        try {
-                                            out.writeByte(flag);
-                                            out.writeLong(txt.getBytes().length);
-                                            out.write(txt.getBytes());
-                                        } catch (Exception e) { e.printStackTrace(); }
-                                    }
-                                }.start();
-                            }
-                        }).create().show();
-//                new Thread(){
-//                    public void run(){
-//                        try{
-//                            String txt="test";
-//                            out.writeByte(flag);
-//                            out.writeLong(txt.getBytes().length);
-//                            out.write(txt.getBytes());
-//                        }catch (Exception e){e.printStackTrace();}
-//                    }
-//                }.start();
+                sendCommand();
             }
         });
         //TODO:四个按钮的监听函数
@@ -189,86 +128,14 @@ public class MainActivity extends AppCompatActivity {
 
         //传输信息：起始标志flag 1byte，长度long，最后是数据byte[]
         //下面是局域网传输数据
-        msg=findViewById(R.id.msg);
-        test_msg=findViewById(R.id.test_msg);
+        showIP();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                WifiManager mWifiManager=(WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                final int ip_int=mWifiManager.getConnectionInfo().getIpAddress();
-                final String ip=ipTrans(ip_int);
-                //System.out.println("new thread "+ip);
-                serverHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        String show=ip+"\n int:"+Integer.toString(ip_int)+"\n port:12345";
-                        msg.setText(show);
-                    }
-                });
-                try{
-                    final ServerSocket server=new ServerSocket(12345);
-                    client=null;
-                    while(client==null){
-                        client=server.accept();
-                    }
-                    in=new DataInputStream(client.getInputStream());
-                    out=new DataOutputStream(client.getOutputStream());
-                    serverHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            test_msg.setText("connect");
-                        }
-                    });
-                    while(true){
-                        if(in.readByte()==flag){
-                            long len=in.readLong();
-                            byte[] msg=new byte[(int)len];
-                            in.read(msg);
-                            //下面测试用，正式使用时可删去
-                            final String s=new String(msg);
-                            final byte[] buffer=msg;
-                            serverHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    String tmp=test_msg.getText().toString();
-                                    tmp+="\n"+s;
-                                    test_msg.setText(tmp);
-
-                                    //图像处理部分
-                                    Bitmap img=BitmapUtils.BytestoBitmap(buffer,null);
-                                    final Canvas canvas = cam_receive.lockCanvas(null);
-                                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);// 清空画布
-                                    Paint paint = new Paint();
-                                    Rect src = new Rect(0, 0, img.getWidth(), img.getHeight());
-                                    Rect dst = new Rect(0, 0, canvas.getWidth(), img.getHeight() * canvas.getWidth() / img.getWidth());
-                                    canvas.drawBitmap(img, src, dst, paint);//将bitmap画到画布上
-                                    cam_receive.unlockCanvasAndPost(canvas);//解锁画布同时提交
-
-                                }
-                            });
-                            if(msg.equals("break")){
-                                in.close();
-                                client.close();
-                                break;
-                            }
-                        }
-                    }
-                }catch (Exception e){e.printStackTrace();}
-
-
-            }
-            public String ipTrans(int a){
-                String res="";
-                res+=a&0xFF;
-                res+=".";
-                res+=(a>>8)&0xFF;
-                res+=".";
-                res+=(a>>16)&0xFF;
-                res+=".";
-                res+=(a>>24)&0xFF;
-                return res;
+                socketThread();
             }
         }).start();
+
 
         measure();
 
@@ -277,6 +144,18 @@ public class MainActivity extends AppCompatActivity {
         cam_receive=findViewById(R.id.camera_receive);
         cam_cap=new camera_capture(this);
 
+    }
+
+    public String ipTrans(int a){
+        String res="";
+        res+=a&0xFF;
+        res+=".";
+        res+=(a>>8)&0xFF;
+        res+=".";
+        res+=(a>>16)&0xFF;
+        res+=".";
+        res+=(a>>24)&0xFF;
+        return res;
     }
 
     private Handler mhandler = new Handler(){
@@ -544,6 +423,95 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return data;
+    }
+
+    //打印ip，端口号
+    private void showIP(){
+        try {
+            msg = findViewById(R.id.msg);
+            test_msg = findViewById(R.id.test_msg);
+            WifiManager mWifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            final int ip_int = mWifiManager.getConnectionInfo().getIpAddress();
+            final String ip = ipTrans(ip_int);
+            String show = ip + "\n int:" + Integer.toString(ip_int) + "\n port:12345";
+            msg.setText(show);
+        }catch (Exception e){e.printStackTrace();}
+    }
+
+    private void sendCommand(){
+        final EditText editCommand = new EditText(MainActivity.this);
+        new AlertDialog.Builder(MainActivity.this)
+                .setView(editCommand).setTitle("send command")
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        final String txt = editCommand.getText().toString();
+                        new Thread() {
+                            public void run() {
+                                try {
+                                    if(client.isOutputShutdown())
+                                        return;
+                                    out.writeByte(flag);
+                                    out.writeLong(txt.getBytes().length);
+                                    out.write(txt.getBytes());
+                                } catch (Exception e) { e.printStackTrace(); }
+                            }
+                        }.start();
+                    }
+                }).create().show();
+    }
+
+    private void socketThread(){
+        try {
+            final ServerSocket server = new ServerSocket(12345);
+            client = null;
+            while (client == null) {
+                client = server.accept();
+            }
+            in = new DataInputStream(client.getInputStream());
+            out = new DataOutputStream(client.getOutputStream());
+            serverHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    test_msg.setText("connect");
+                }
+            });
+            while (true) {
+                if (client.isConnected() && !client.isInputShutdown() && in.readByte() == flag) {
+                    long len = in.readLong();
+                    Log.d("data length:", Long.toString(len));
+                    if (len < 0 || len > 2147483646)
+                        continue;
+                    byte[] msg = new byte[(int) len];
+                    Log.d("msg", "finish");
+                    in.read(msg);
+                    final byte[] buffer = msg;
+                    if (msg.equals("break")) {
+                        in.close();
+                        out.close();
+                        client.close();
+                        break;
+                    }
+                    serverHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            //图像处理部分
+                            Bitmap img = BitmapUtils.BytestoBitmap(buffer, null);
+                            final Canvas canvas = cam_receive.lockCanvas(null);
+                            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);// 清空画布
+                            Paint paint = new Paint();
+                            Rect src = new Rect(0, 0, img.getWidth(), img.getHeight());
+                            Rect dst = new Rect(0, 0, canvas.getWidth(), img.getHeight() * canvas.getWidth() / img.getWidth());
+                            canvas.drawBitmap(img, src, dst, paint);//将bitmap画到画布上
+                            cam_receive.unlockCanvasAndPost(canvas);//解锁画布同时提交
+
+                        }
+                    });
+                } else if (!client.isConnected()) {
+                    break;
+                }
+            }
+        }catch (Exception e){e.printStackTrace();}
     }
 }
 

@@ -27,16 +27,11 @@
         android:textSize="25sp"
         />
 
-    <EditText
-        android:id="@+id/edit_msg"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
     <Button
         android:id="@+id/msg_send"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="发送"
+        android:text="终止连接"
         />
 
     <RelativeLayout

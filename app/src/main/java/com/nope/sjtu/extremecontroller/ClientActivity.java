@@ -27,7 +27,7 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
 
     //定义相关变量,完成初始化
     private TextView txtshow;
-    private EditText editsend,edit_ip;
+    private EditText edit_ip;
     private Button btnsend,ip_send;
     private String HOST="192.168.3.3";
     private int PORT=22222;
@@ -54,7 +54,6 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
 
         sb = new StringBuilder();
         txtshow = (TextView) findViewById(R.id.msg_show);
-        editsend = (EditText) findViewById(R.id.edit_msg);
         btnsend = (Button) findViewById(R.id.msg_send);
         edit_ip=findViewById(R.id.edit_ip);
         ip_send=findViewById(R.id.ip_send);
@@ -82,7 +81,7 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
                         testHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                txtshow.setText(txtshow.getText() + "\n" + "00000");
+                                txtshow.setText(txtshow.getText() + "\n" + "connected");
                             }
                         });
                     }
@@ -114,18 +113,7 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
         btnsend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String txt = editsend.getText().toString();
-                new Thread(){
-                    public void run() {
-                        try {
-                            out.writeByte(flag);
-                            out.writeLong(txt.getBytes().length);
-                            out.write(txt.getBytes());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
+                sendStopMessage();
             }
         });
         cam_preview=findViewById(R.id.camera_preview);
@@ -142,9 +130,11 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
             @Override
             public void OnImageDataReady(byte[] data) {
                 //在这里写传出用的代码。
+                sendImageMessage(data);
                 Log.d("CLIENT","Image ready");
             }
         });
+
     }
     @Override
     protected void onPause(){
@@ -175,5 +165,35 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void sendImageMessage(final byte[] data){
+        new Thread(){
+            public void run(){
+                try{
+                    out.write(flag);
+                    out.writeLong(data.length);
+                    out.write(data);
+                }catch (Exception e){e.printStackTrace();}
+            }
+        }.start();
+    }
+
+    private void sendStopMessage(){
+        new Thread(){
+            public void run() {
+                try {
+                    final String txt="break";
+                    out.writeByte(flag);
+                    out.writeLong(txt.getBytes().length);
+                    out.write(txt.getBytes());
+                    out.close();
+                    in.close();
+                    socket.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 }
