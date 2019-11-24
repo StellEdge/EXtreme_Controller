@@ -125,23 +125,8 @@ public class MainActivity extends AppCompatActivity {
         //paintBoard = new PaintBoard(this);
         canvas = new Canvas();
         axis = findViewById(R.id.axis);
-        if(!bt.isBluetoothAvailable()) {
-            BTavailable=false;
-            //Log.d(BT, "onCreate: NO BLUETOOTH SUPPORT");
-        } else {
-            BTavailable=true;
-            bt.setupService();
-            bt.startService(BluetoothState.DEVICE_OTHER);
-            if(!bt.isBluetoothEnabled()) {
-                bt.enable();
-            }
-        }
-        //文本接收
-        bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
-            public void onDataReceived(byte[] data, String message) {
-                // Do something when data incoming
-            }
-        });
+        BluetoothOpen();
+
         teller = (TextView)findViewById(R.id.teller);
         teller.setText("temp");
         Button button_start = findViewById(R.id.button_start);
@@ -286,19 +271,10 @@ public class MainActivity extends AppCompatActivity {
 
         measure();
 
+        //find view by ID 在oncreate中使用比较好。
         cam_preview=findViewById(R.id.camera_preview);
-        cam_cap=new camera_capture(this);
-        cam_cap.initTexture(cam_preview);
-        //获得图像信息的方法：mOnImageDataReadyListener 事件回调
-        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
-            @Override
-            public void OnImageDataReady(byte[] data) {
-                //在这里写传出用的代码。
-            }
-        });
-
         cam_receive=findViewById(R.id.camera_receive);
-        
+        cam_cap=new camera_capture(this);
 
     }
 
@@ -316,7 +292,26 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    @Override
+    protected void onResume(){
+        super.onResume();
+        Log.d(TAG,"On Resume");
+        //重建相机权限。
+        cam_cap.initTexture(cam_preview);
+        //获得图像信息的方法：mOnImageDataReadyListener 事件回调
+        cam_cap.setOnImageDataReadyListener(new camera_capture.OnImageDataReadyListener() {
+            @Override
+            public void OnImageDataReady(byte[] data) {
+                //在这里写传出用的代码。
+            }
+        });
+    }
+    @Override
+    protected void onStop(){
+        super.onStop();
+        cam_cap.closeCamera();
 
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -361,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
          */
 
         calculate(mlocation);
-        BluetoothSend(" ",CirSend(this.speed, this.radius));
+        BluetoothSend(" ",ConvertCommand(this.speed, this.radius));
         return true;
     }
 
@@ -456,13 +451,33 @@ public class MainActivity extends AppCompatActivity {
     }
     //这个返回大写十六进制command，对应双轮条形UI界面
     //StellEdge：不存在的
+    void BluetoothOpen(){
+        if(!bt.isBluetoothAvailable()) {
+            BTavailable=false;
+            //Log.d(BT, "onCreate: NO BLUETOOTH SUPPORT");
+        } else {
+            BTavailable=true;
+            bt.setupService();
+            bt.startService(BluetoothState.DEVICE_OTHER);
+            if(!bt.isBluetoothEnabled()) {
+                bt.enable();
+            }
+        }
+        //文本接收
+        bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
+            public void onDataReceived(byte[] data, String message) {
+                // Do something when data incoming
+            }
+        });
+    }
     void BluetoothSend(String tag,String commandline){
         //tag目前就是多留个接口
         //直接调用这个函数来进行蓝牙数据发送
         //If you want to send any data. boolean parameter is mean that data will send with ending by LF and CR or not.
         //If yes your data will added by LF & CR 末尾添加回车或换行
         Log.d(TAG, "BluetoothSend: "+commandline);
-        byte[] myb=HexCommandtoByte(commandline.getBytes());
+        //byte[] myb=HexCommandtoByte(commandline.getBytes());
+        byte[] myb=commandline.getBytes();
         if (bt.isServiceAvailable()) {
             bt.send(myb, false);
         }else{
@@ -487,6 +502,22 @@ public class MainActivity extends AppCompatActivity {
                 }*/
             }
         }).start();
+    }
+    private final float car_width=11.2f;
+    private final float voltage_correction=0.8f;
+    public String ConvertCommand(float speed,float radius){
+        //VL=Vc(1-L/2r)
+        //VR=Vc(1+L/2r)
+        float Vc=speed*voltage_correction;
+        float VL_f=Vc*(1-car_width/(2*radius));
+        float VR_f=Vc*(1+car_width/(2*radius));
+        int VL=(int)(VL_f);
+        int VR=(int)(VR_f);
+        char sign;
+        if (Vc>0) sign='0';
+        else sign='1';
+        String out=""+sign+VL+sign+VR+';';
+        return out;
     }
     //StellEdge:16进制byte字符串转byte编码
     public static byte[] HexCommandtoByte(byte[] data) {
