@@ -40,6 +40,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 
 public class MainActivity extends AppCompatActivity {
@@ -307,8 +308,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
     @Override
-    protected void onStop(){
-        super.onStop();
+    protected void onPause(){
+        super.onPause();
         cam_cap.closeCamera();
 
     }
@@ -511,12 +512,12 @@ public class MainActivity extends AppCompatActivity {
         float Vc=speed*voltage_correction;
         float VL_f=Vc*(1-car_width/(2*radius));
         float VR_f=Vc*(1+car_width/(2*radius));
-        int VL=(int)(VL_f);
-        int VR=(int)(VR_f);
+        int VL=(int)(abs(VL_f));
+        int VR=(int)(abs(VR_f));
         char sign;
         if (Vc>0) sign='0';
         else sign='1';
-        String out=""+sign+VL+sign+VR+';';
+        String out=""+sign+String.format("%1$04d", VL)+sign+String.format("%1$04d", VR)+';';
         return out;
     }
     //StellEdge:16进制byte字符串转byte编码

@@ -130,6 +130,12 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
             }
         });
         cam_preview=findViewById(R.id.camera_preview);
+
+        //new Thread(ClientActivity.this).start();
+    }
+    @Override
+    protected void onResume(){
+        super.onResume();
         cam_cap=new camera_capture(this);
         cam_cap.initTexture(cam_preview);
         //获得图像信息的方法：mOnImageDataReadyListener 事件回调
@@ -140,10 +146,12 @@ public class ClientActivity extends AppCompatActivity implements Runnable{
                 Log.d("CLIENT","Image ready");
             }
         });
-
-        //new Thread(ClientActivity.this).start();
     }
-
+    @Override
+    protected void onPause(){
+        super.onPause();
+        cam_cap.closeCamera();
+    }
     //重写run方法,在该方法中输入流的读取
     @Override
     public void run() {
