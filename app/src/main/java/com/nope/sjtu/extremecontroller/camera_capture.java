@@ -115,11 +115,17 @@ public class camera_capture {
         @Override
         public void onDisconnected(CameraDevice camera) {
             camera.close();
+            mCameraDevice = null;
         }
 
         @Override
         public void onError(CameraDevice camera, int error) {
             camera.close();
+            mCameraDevice = null;
+        }
+        @Override
+        public void onClosed(CameraDevice camera){
+            super.onClosed(camera);
         }
     };
 
