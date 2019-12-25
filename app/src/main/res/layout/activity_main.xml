@@ -40,22 +40,22 @@
         android:background="@drawable/button1"
         android:text="@string/连接蓝牙" />
 
-    <!--连接热点-->
-    <Button
-        android:id="@+id/button_wifi"
-        android:layout_width="150dp"
-        android:layout_height="75dp"
-        android:layout_below="@+id/button_bluetooth"
-        android:layout_alignParentEnd="true"
-        android:background="@drawable/button1"
-        android:text="@string/连接热点" />
+<!--    &lt;!&ndash;连接热点&ndash;&gt;-->
+<!--    <Button-->
+<!--        android:id="@+id/button_wifi"-->
+<!--        android:layout_width="150dp"-->
+<!--        android:layout_height="75dp"-->
+<!--        android:layout_below="@+id/button_bluetooth"-->
+<!--        android:layout_alignParentEnd="true"-->
+<!--        android:background="@drawable/button1"-->
+<!--        android:text="@string/连接热点" />-->
 
     <!--结束按钮-->
     <Button
         android:id="@+id/button_end"
         android:layout_width="150dp"
         android:layout_height="75dp"
-        android:layout_below="@+id/button_wifi"
+        android:layout_below="@+id/button_bluetooth"
         android:layout_alignParentEnd="true"
         android:background="@drawable/button1"
         android:text="@string/结束" />
@@ -96,26 +96,6 @@
         android:layout_below="@+id/button_start"
         android:layout_toStartOf="@+id/button_bluetooth"
         android:text="@string/speed_00_radius_66666"
-        android:textColor="@android:color/background_dark"
-        android:textSize="18sp" />
-
-    <TextView
-        android:id="@+id/msg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/teller"
-        android:layout_toStartOf="@id/button_start"
-        android:text="@string/empty"
-        android:textColor="@android:color/background_dark"
-        android:textSize="18sp" />
-
-    <TextView
-        android:id="@+id/test_msg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/teller"
-        android:layout_toStartOf="@id/button_end"
-        android:text="no news"
         android:textColor="@android:color/background_dark"
         android:textSize="18sp" />
 
