@@ -227,6 +227,8 @@ public class camera_capture {
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireLatestImage();
             //因为是ImageFormat.JPEG格式，所以 image.getPlanes()返回的数组只有一个，也就是第0个。
+            if(image==null)
+                return;
             ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[byteBuffer.remaining()];
             byteBuffer.get(bytes);

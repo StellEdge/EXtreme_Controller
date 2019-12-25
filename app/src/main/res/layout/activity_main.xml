@@ -99,26 +99,6 @@
         android:textColor="@android:color/background_dark"
         android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/msg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/teller"
-        android:layout_toStartOf="@id/button_start"
-        android:text="@string/empty"
-        android:textColor="@android:color/background_dark"
-        android:textSize="18sp" />
-
-    <TextView
-        android:id="@+id/test_msg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/teller"
-        android:layout_toStartOf="@id/button_end"
-        android:text="no news"
-        android:textColor="@android:color/background_dark"
-        android:textSize="18sp" />
-
     <RelativeLayout
         android:id="@+id/relativeLayout"
         android:layout_width="212dp"

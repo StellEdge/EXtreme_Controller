@@ -24,24 +24,24 @@
         android:text="@string/Button_Start_Text"
         android:textSize="14sp" />
 
+    <!--结束按钮-->
+
     <Button
         android:id="@+id/button_control_2"
         android:layout_width="150dp"
         android:layout_height="75dp"
-        android:layout_below="@+id/button_start"
+        android:layout_below="@+id/textShowIP"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="-74dp"
-        android:layout_marginEnd="119dp"
+        android:layout_marginTop="109dp"
+        android:layout_marginEnd="133dp"
         android:background="@drawable/button1"
         android:text="@string/连接蓝牙" />
-
-    <!--结束按钮-->
 
     <Button
         android:id="@+id/button_wifi"
         android:layout_width="150dp"
         android:layout_height="75dp"
-        android:layout_below="@+id/button_bluetooth"
+        android:layout_below="@+id/button_control_1"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="56dp"
         android:layout_marginEnd="448dp"
@@ -54,8 +54,8 @@
         android:layout_height="75dp"
         android:layout_below="@+id/button_wifi"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="-75dp"
-        android:layout_marginEnd="106dp"
+        android:layout_marginTop="-76dp"
+        android:layout_marginEnd="125dp"
         android:background="@drawable/button1"
         android:text="@string/结束" />
 

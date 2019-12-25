@@ -2,6 +2,7 @@ package com.nope.sjtu.extremecontroller;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.ContactsContract;
@@ -19,6 +20,10 @@ public class SocketService extends Service {
     private final String TAG="SocketService";
     private boolean isServiceConnect=true;
     private byte flag=(byte)0xee;
+    private DataInputStream in;
+    private DataOutputStream out;
+    private UniqueImage uniqueImage=new UniqueImage();
+    private OnReceiveImageListener onReceiveImageListener;
 
     public SocketService(){
 
@@ -54,7 +59,28 @@ public class SocketService extends Service {
     @Override
     public IBinder onBind(Intent intent){
         Log.e(TAG, "onBind");
-        throw new UnsupportedOperationException("Not yet implemented");
+        return new SocketServiceBinder();
+    }
+
+    public class SocketServiceBinder extends Binder {
+        public SocketService getService(){
+            return SocketService.this;
+        }
+    }
+
+
+
+    public interface OnReceiveImageListener{
+        void receiveImage(UniqueImage uniqueImageS);
+    }
+
+    //外部activity使用，返回得到的字节流信息
+    public UniqueImage getImage(){
+        return uniqueImage;
+    }
+
+    public void setOnReceiveImageListener(OnReceiveImageListener onReceiveImageListener){
+        this.onReceiveImageListener=onReceiveImageListener;
     }
 
     private class Server implements Runnable{
@@ -68,26 +94,27 @@ public class SocketService extends Service {
                 while(isServiceConnect&&client==null){
                     client=serverSocket.accept();
                 }
-                DataInputStream in=new DataInputStream(client.getInputStream());
-                DataOutputStream out=new DataOutputStream(client.getOutputStream());
+                in=new DataInputStream(client.getInputStream());
+                out=new DataOutputStream(client.getOutputStream());
                 Log.e("client","linked");
                 while(isServiceConnect&&client.isConnected()){
                     if(in.readByte()==flag){
-                        long len=in.readLong();
-                        Log.e("data length:", Long.toString(len));
-                        if (len < 0 || len > 2147483646)
+                        uniqueImage.size=in.readLong();
+                        Log.e("data length:", Long.toString(uniqueImage.size));
+                        if (uniqueImage.size < 0 || uniqueImage.size > 100000000)
                             continue;
-                        byte[] msg = new byte[(int) len];
+                        uniqueImage.data = new byte[(int) uniqueImage.size];
                         Log.e("msg", "finish");
-                        in.read(msg);
-                        final byte[] buffer = msg;
-                        if (msg.equals("break")) {
+                        in.read(uniqueImage.data);
+                        if (uniqueImage.data.equals("break")) {
                             in.close();
                             out.close();
                             client.close();
                             break;
                         }
-                        //TODO 传出msg
+                        try {
+                            onReceiveImageListener.receiveImage(uniqueImage);
+                        }catch(Exception e){e.printStackTrace();}
                     }
                 }
             }catch(Exception e){e.printStackTrace();}

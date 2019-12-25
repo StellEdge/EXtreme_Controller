@@ -1,9 +1,12 @@
 package com.nope.sjtu.extremecontroller;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.wifi.WifiManager;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +24,7 @@ import java.util.List;
 public class StartActivity extends AppCompatActivity{// implements EasyPermissions.PermissionCallbacks{
     TextView textShowIP;
     Button button_wifi;
+    Button testButton;
     private final int REQUEST_CODE=998;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +42,19 @@ public class StartActivity extends AppCompatActivity{// implements EasyPermissio
         });
         showIP();
 
-        //requestPermission();
-    }
+        final Intent intent=new Intent(this,SocketService.class);
+        startService(intent);
 
+        //requestPermission();
+        testButton=findViewById(R.id.button_control_1);
+        testButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(StartActivity.this,MainActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
     private void showIP(){
         try {
             WifiManager wifiManager=(WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
