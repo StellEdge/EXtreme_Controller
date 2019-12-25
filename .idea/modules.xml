@@ -2,10 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/3C-res.iml" filepath="$PROJECT_DIR$/3C-res.iml" />
+      <module fileurl="file://D:\Androidproj\EXtreme_Controller\3C-res.iml" filepath="D:\Androidproj\EXtreme_Controller\3C-res.iml" />
       <module fileurl="file://$PROJECT_DIR$/EXtreme_Controller.iml" filepath="$PROJECT_DIR$/EXtreme_Controller.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://D:/Androidproj/EXtreme_Controller/res.iml" filepath="D:/Androidproj/EXtreme_Controller/res.iml" />
+      <module fileurl="file://D:\Androidproj\EXtreme_Controller\res.iml" filepath="D:\Androidproj\EXtreme_Controller\res.iml" />
     </modules>
   </component>
 </project>

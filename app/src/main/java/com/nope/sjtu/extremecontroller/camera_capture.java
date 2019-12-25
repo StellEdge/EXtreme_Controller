@@ -26,6 +26,7 @@ import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.app.Activity;
 import android.util.Size;
@@ -43,6 +44,7 @@ public class camera_capture {
     private Camera mCamera;
     private CameraDevice mCameraDevice;
     private String mCameraId;
+    private CameraCaptureSession mCameraCaptureSession;
 
     private TextureView mTextureView;
     private Size previewSize;
@@ -63,12 +65,6 @@ public class camera_capture {
     }
 
     public camera_capture(Activity activity) {
-
-        //handler setting
-        mhandlerThread = new HandlerThread("CameraThread");
-        mhandlerThread.start();
-        mHandler = new Handler(mhandlerThread.getLooper());
-
         callingActivity=activity;
     }
 
@@ -78,38 +74,36 @@ public class camera_capture {
      * @param textureView 需要预览的TextureView
      */
     public void initTexture(TextureView textureView) {
+        //handler setting
+        mhandlerThread = new HandlerThread("CameraThread");
+        mhandlerThread.start();
+        mHandler = new Handler(mhandlerThread.getLooper());
+
         mTextureView = textureView;
-        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-            @Override
-            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                openCamera(width, height);
-            }
-            @Override
-            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
-            @Override
-            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {return false;}
-            @Override
-            public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
-        });
+        textureView.setSurfaceTextureListener(mTextureListener);
+
+
     }
+
+    private TextureView.SurfaceTextureListener mTextureListener=new TextureView.SurfaceTextureListener() {
+        @Override
+        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            openCamera(width, height);
+        }
+        @Override
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+        @Override
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {return false;}
+        @Override
+        public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+    };
 
     private CameraDevice.StateCallback mCameraDeviceStateCallback = new CameraDevice.StateCallback() {
 
         @Override
         public void onOpened(CameraDevice camera) {
             mCameraDevice = camera;
-            SurfaceTexture surfaceTexture=mTextureView.getSurfaceTexture();
-            surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
-            Surface previewSurface = new Surface(surfaceTexture);
-            try {
-                mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                //There it supports multi putput target
-                mPreviewBuilder.addTarget(previewSurface);
-                mPreviewBuilder.addTarget(mImageReader.getSurface());
-                mCameraDevice.createCaptureSession(Arrays.asList(previewSurface,mImageReader.getSurface()), mCameraCaptureSessionStateCallBack , mHandler);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
+            startPreview();
         }
 
         @Override
@@ -128,25 +122,38 @@ public class camera_capture {
             super.onClosed(camera);
         }
     };
-
-    private CameraCaptureSession.StateCallback mCameraCaptureSessionStateCallBack = new CameraCaptureSession.StateCallback() {
-        @Override
-        public void onConfigured(CameraCaptureSession session) {
-            CaptureRequest request = mPreviewBuilder.build();
-            try {
-                //获取一个Image，one-shot
+    private void startPreview(){
+        SurfaceTexture surfaceTexture=mTextureView.getSurfaceTexture();
+        surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+        Surface previewSurface = new Surface(surfaceTexture);
+        try {
+            mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            //There it supports multi putput target
+            mPreviewBuilder.addTarget(previewSurface);
+            mPreviewBuilder.addTarget(mImageReader.getSurface());
+            mCameraDevice.createCaptureSession(Arrays.asList(previewSurface,mImageReader.getSurface()),
+                    new CameraCaptureSession.StateCallback() {
+                        @Override
+                        public void onConfigured(CameraCaptureSession session) {
+                            CaptureRequest request = mPreviewBuilder.build();
+                            mCameraCaptureSession=session;
+                            try {
+                                //获取一个Image，one-shot
 //                session.capture(request, null, mCameraHandler);
-                //开启获取Image，repeat模式
-                session.setRepeatingRequest(request, null, mHandler);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
+                                //开启获取Image，repeat模式
+                                session.setRepeatingRequest(request, null, mHandler);
+                            } catch (CameraAccessException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onConfigureFailed(CameraCaptureSession session) {}
+                    }, mHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
         }
-
-        @Override
-        public void onConfigureFailed(CameraCaptureSession session) {}
-    };
-
+    }
     private Size getOptimalPreviewSize(Size[] sizes, int w, int h) {
         final double ASPECT_TOLERANCE = 0.1;
         double targetRatio = (double) w / h;
@@ -183,17 +190,15 @@ public class camera_capture {
     public void openCamera(int view_width,int view_height) {
         CameraManager mCameraManager = (CameraManager) callingActivity.getSystemService(Context.CAMERA_SERVICE);
         try {
-            if (ActivityCompat.checkSelfPermission(callingActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                Log.d(TAG,"No permission to access camera.");
-                ActivityCompat.requestPermissions(callingActivity,new String[]{Manifest.permission.CAMERA},0);
-                return;
+            if(ContextCompat.checkSelfPermission(callingActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                if(ActivityCompat.shouldShowRequestPermissionRationale(callingActivity,Manifest.permission.CAMERA)){
+                    //TODO
+                }
+                else{
+                    ActivityCompat.requestPermissions(callingActivity,
+                            new String[]{Manifest.permission.CAMERA},
+                            0);
+                }
             }
             for (String cameraId : mCameraManager.getCameraIdList()) {
                 //get camera characteristics for camera with cameraID
@@ -226,6 +231,7 @@ public class camera_capture {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireLatestImage();
+            if(image==null){return;}    //安全起见，有时候采不到样
             //因为是ImageFormat.JPEG格式，所以 image.getPlanes()返回的数组只有一个，也就是第0个。
             ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[byteBuffer.remaining()];
@@ -234,7 +240,7 @@ public class camera_capture {
             Bitmap temp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             //因为摄像机数据默认是横的，所以需要旋转90度。
             Bitmap newBitmap = rotate(temp, 90);
-            byte[] outdata = transImage(newBitmap, 848, 480);
+            byte[] outdata = transImage(temp, 848, 480);
             int length = outdata.length;
 
             //out.write((byte) 0xA0);
@@ -246,7 +252,7 @@ public class camera_capture {
             }
 
             //抛出去展示或存储。
-            //Log.d(TAG,"New data ready");
+            Log.d(TAG,"New data ready");
             //一定需要close，否则不会收到新的Image回调。
             image.close();
         }
@@ -298,7 +304,13 @@ public class camera_capture {
     }
 
     public void closeCamera() {
-        mCameraDevice.close();
+        if (mCameraCaptureSession != null){
+            mCameraCaptureSession.close();
+            mCameraCaptureSession = null;
+        }
+        if(mCameraDevice!=null){
+            mCameraDevice.close();
+            mCameraDevice=null;
+        }
     }
-
 }
