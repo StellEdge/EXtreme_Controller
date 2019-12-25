@@ -1,20 +1,13 @@
 package com.nope.sjtu.extremecontroller;
 
-import android.Manifest;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.net.wifi.WifiManager;
-import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
-import java.util.List;
 
 //import pub.devrel.easypermissions.EasyPermissions;
 //import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -46,7 +39,7 @@ public class StartActivity extends AppCompatActivity{// implements EasyPermissio
         startService(intent);
 
         //requestPermission();
-        testButton=findViewById(R.id.button_control_1);
+        testButton=findViewById(R.id.button_control_joy);
         testButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

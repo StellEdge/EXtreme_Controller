@@ -2,8 +2,12 @@
     <string name="app_name">EXtreme Controller</string>
     <string name="title_activity_hde_link">HDeLinkActivity</string>
     <string name="Button_Start_Text">启动</string>
+    <string name="Button_joystick_Text">JOYSTICK</string>
+    <string name="Button_speech_Text">SPEECH</string>
+    <string name="Button_gravity_Text">GRAVITY</string>
+    <string name="Button_gesture_Text">GESTURE</string>
     <string name="连接蓝牙">连接蓝牙</string>
-    <string name="连接热点">连接热点</string>
+    <string name="连接热点">WIFI</string>
     <string name="结束">结束</string>
     <string name="speed_00_radius_66666">speed:00, radius:66666</string>
     <string name="scan">SCAN</string>
