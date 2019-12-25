@@ -31,7 +31,7 @@ public class GravitySeneor extends AppCompatActivity {
         if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.gravity_controller);
         sensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensor = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         report=(TextView)findViewById(R.id.textView);
@@ -45,6 +45,9 @@ public class GravitySeneor extends AppCompatActivity {
                 if(y>0) { r = (float) (1.0/(y+0.00001)-0.1); }
                 else { r = (float) (1.0/(y+0.00001)+0.1); }
                 report.setText(String.format("X;%f, Y:%f, Z:%f, state:%d, V:%f, R:%f",x, y, z,state,v, r));
+
+                //Send v,r here
+
             }
             public void onAccuracyChanged(Sensor s, int accuracy) {
             }

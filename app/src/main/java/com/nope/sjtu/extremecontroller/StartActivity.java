@@ -17,6 +17,9 @@ import android.widget.TextView;
 public class StartActivity extends AppCompatActivity{// implements EasyPermissions.PermissionCallbacks{
     TextView textShowIP;
     Button button_wifi;
+    Button button_gravity;
+    Button button_speech;
+    Button button_gesture;
     Button testButton;
     private final int REQUEST_CODE=998;
     @Override
@@ -44,6 +47,33 @@ public class StartActivity extends AppCompatActivity{// implements EasyPermissio
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(StartActivity.this,MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        button_gravity=findViewById(R.id.button_gravity);
+        button_gravity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(StartActivity.this,GravitySeneor.class);
+                startActivity(intent);
+            }
+        });
+
+        button_speech=findViewById(R.id.button_speech);
+        button_speech.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(StartActivity.this,NLP.class);
+                startActivity(intent);
+            }
+        });
+
+        button_gesture=findViewById(R.id.button_gesture);
+        button_gesture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(StartActivity.this,GestureActivity.class);
                 startActivity(intent);
             }
         });

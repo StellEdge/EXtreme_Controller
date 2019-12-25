@@ -18,45 +18,40 @@
         android:scaleType="centerCrop"
         app:srcCompat="@drawable/background" />
 
-    <LinearLayout
-        android:layout_width="80dp"
+    <RelativeLayout
+        android:id="@+id/relativeLayout2"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="6"
-        android:orientation="vertical">
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_weight="64">
+
+        <Button
+            android:id="@+id/button_wifi"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_alignBaseline="@+id/button_gesture"
+            android:layout_alignBottom="@+id/button_gesture"
+            android:layout_toEndOf="@+id/button_gesture"
+            android:layout_weight="5"
+            android:background="@drawable/button_small"
+            android:rotation="-90"
+            android:text="@string/连接热点" />
 
         <TextView
             android:id="@+id/textShowIP"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/icon_speech"
-            android:layout_alignParentEnd="true"
+            android:layout_alignBaseline="@+id/button_speech"
+            android:layout_alignBottom="@+id/button_speech"
+            android:layout_marginStart="68dp"
+            android:layout_toEndOf="@+id/icon_speech"
             android:layout_weight="16"
             android:rotation="-90
     "
             android:text="尚未连接WiFi"
             android:textSize="24sp"
             app:layout_constraintDimensionRatio="h,1:1" />
-
-        <Button
-            android:id="@+id/button_wifi"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_alignBottom="@+id/relativeLayout2"
-            android:layout_alignParentStart="true"
-            android:layout_weight="5"
-            android:background="@drawable/button_small"
-            android:rotation="-90"
-            android:text="@string/连接热点" />
-    </LinearLayout>
-
-    <RelativeLayout
-        android:id="@+id/relativeLayout2"
-        android:layout_width="580dp"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="50dp"
-        android:layout_weight="64">
 
         <Button
             android:id="@+id/button_gesture"
