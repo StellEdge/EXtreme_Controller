@@ -40,22 +40,22 @@
         android:background="@drawable/button1"
         android:text="@string/连接蓝牙" />
 
-    <!--连接热点-->
-    <Button
-        android:id="@+id/button_wifi"
-        android:layout_width="150dp"
-        android:layout_height="75dp"
-        android:layout_below="@+id/button_bluetooth"
-        android:layout_alignParentEnd="true"
-        android:background="@drawable/button1"
-        android:text="@string/连接热点" />
+<!--    &lt;!&ndash;连接热点&ndash;&gt;-->
+<!--    <Button-->
+<!--        android:id="@+id/button_wifi"-->
+<!--        android:layout_width="150dp"-->
+<!--        android:layout_height="75dp"-->
+<!--        android:layout_below="@+id/button_bluetooth"-->
+<!--        android:layout_alignParentEnd="true"-->
+<!--        android:background="@drawable/button1"-->
+<!--        android:text="@string/连接热点" />-->
 
     <!--结束按钮-->
     <Button
         android:id="@+id/button_end"
         android:layout_width="150dp"
         android:layout_height="75dp"
-        android:layout_below="@+id/button_wifi"
+        android:layout_below="@+id/button_bluetooth"
         android:layout_alignParentEnd="true"
         android:background="@drawable/button1"
         android:text="@string/结束" />

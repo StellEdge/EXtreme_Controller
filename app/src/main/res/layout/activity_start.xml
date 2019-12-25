@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".StartActivity"
+
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <Button
+        android:id="@+id/button_control_1"
+        android:layout_width="150dp"
+        android:layout_height="75dp"
+
+        android:layout_below="@id/textShowIP"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="107dp"
+        android:layout_marginEnd="448dp"
+        android:background="@drawable/button1"
+        android:text="@string/Button_Start_Text"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/button_control_2"
+        android:layout_width="150dp"
+        android:layout_height="75dp"
+        android:layout_below="@+id/button_start"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="-74dp"
+        android:layout_marginEnd="119dp"
+        android:background="@drawable/button1"
+        android:text="@string/连接蓝牙" />
+
+    <!--结束按钮-->
+
+    <Button
+        android:id="@+id/button_wifi"
+        android:layout_width="150dp"
+        android:layout_height="75dp"
+        android:layout_below="@+id/button_bluetooth"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="56dp"
+        android:layout_marginEnd="448dp"
+        android:background="@drawable/button1"
+        android:text="@string/连接热点" />
+
+    <Button
+        android:id="@+id/button_control_3"
+        android:layout_width="150dp"
+        android:layout_height="75dp"
+        android:layout_below="@+id/button_wifi"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="-75dp"
+        android:layout_marginEnd="106dp"
+        android:background="@drawable/button1"
+        android:text="@string/结束" />
+
+    <TextView
+        android:id="@+id/textShowIP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="尚未连接WiFi"
+        android:textSize="30sp"
+        android:layout_centerHorizontal="true"/>
+
+
+</RelativeLayout>
