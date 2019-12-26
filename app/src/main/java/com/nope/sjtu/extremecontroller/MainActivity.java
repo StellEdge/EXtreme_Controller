@@ -19,8 +19,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.TextureView;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import static java.lang.Math.abs;
@@ -223,7 +221,8 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case MotionEvent.ACTION_UP:
                 mlocation.update_condition(false);
-                break;
+                socketService.sendCommand("1000010000;");
+                return true;
             default:
                 break;
         }
@@ -233,8 +232,8 @@ public class MainActivity extends AppCompatActivity {
          * Called when the user touches the button
          */
 
-        calculate(mlocation);//TODO
-        socketService.sendCommand(ConvertCommand(this.speed, this.radius));
+        calculate(mlocation);
+        socketService.sendCommand(calCommand());
         //BluetoothSend(" ",ConvertCommand(this.speed, this.radius));
         new Thread(new Runnable() {
             @Override
@@ -251,6 +250,24 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    private String calCommand(){
+        double centerx = 500;
+        double centery = this.heightPixels/2;
+        double deltax=mlocation.x()-centerx,deltay=mlocation.y()-centery;
+        String left="0001000100;",right="0010000010;",forward="0010000100;",back="1010010100;";
+        if(deltax>deltay){
+            if(deltax>-deltay)
+                return right;
+            else
+                return forward;
+        }
+        else{
+            if(deltay>-deltax)
+                return back;
+            else
+                return left;
+        }
+    }
 
     private void calculate(Location mlocation){
         double centerx = 500;

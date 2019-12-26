@@ -75,32 +75,32 @@ public class GestureActivity extends AppCompatActivity  implements
             if (!allPointList.isEmpty()){
                 Point first_point = allPointList.get(0);
                 Point last_point = allPointList.get(allPointList.size() - 1);
-                double rmax=255,vmax=255,radius=-1,velocity=-1;
-                if(last_point.x-first_point.x>=dragThres_main && Math.abs(last_point.y-first_point.y) <=dragThres_sub){
+                int VL=0,VR=0,vmax=100;
+                if(last_point.x-first_point.x>=dragThres_main && abs(last_point.y-first_point.y) <=dragThres_sub){
                     //right scroll
                     Log.i(TAG, String.format("A right scroll"));
-                    radius=-0.01;
-                    velocity=0.2*vmax;
+                    VL=vmax;
+                    VR=vmax/10;
                 }
-                else if(first_point.x-last_point.x>=dragThres_main && Math.abs(last_point.y-first_point.y) <=dragThres_sub){
+                else if(first_point.x-last_point.x>=dragThres_main && abs(last_point.y-first_point.y) <=dragThres_sub){
                     //left scroll
                     Log.i(TAG, String.format("A left scroll"));
-                    radius=0.01;
-                    velocity=0.2*vmax;
+                    VL=vmax/10;
+                    VR=vmax;
                 }
-                else if(last_point.y-first_point.y>=dragThres_main && Math.abs(last_point.x-first_point.x) <=dragThres_sub){
+                else if(last_point.y-first_point.y>=dragThres_main && abs(last_point.x-first_point.x) <=dragThres_sub){
                     //down scroll
                     Log.i(TAG, String.format("A down scroll"));
-                    radius=rmax;
-                    velocity=-vmax;
+                    VL=-vmax;
+                    VR=-vmax;
                 }
-                else if(first_point.y-last_point.y>=dragThres_main && Math.abs(last_point.x-first_point.x) <=dragThres_sub){
+                else if(first_point.y-last_point.y>=dragThres_main && abs(last_point.x-first_point.x) <=dragThres_sub){
                     //up scroll
                     Log.i(TAG, String.format("A up scroll"));
-                    radius=rmax;
-                    velocity=vmax;
+                    VL=vmax;
+                    VR=vmax;
                 }
-                else if(Math.abs(last_point.y-first_point.y) <=dragThres_sub && Math.abs(last_point.x-first_point.x) <=dragThres_sub && allPointList.size()>4){
+                else if(abs(last_point.y-first_point.y) <=dragThres_sub && abs(last_point.x-first_point.x) <=dragThres_sub && allPointList.size()>4){
                     //circle scroll
                     Point middle_point = allPointList.get((allPointList.size() - 1)/2);
                     Point quadriple_point_1_4 = allPointList.get((allPointList.size() - 1)/4);
@@ -112,18 +112,20 @@ public class GestureActivity extends AppCompatActivity  implements
                         //clockwise
                         Log.i(TAG, String.format("An Inverse Clockwise scroll"));
                         //stop
-                        radius=rmax;
-                        velocity=0;
+                        VL=-vmax;
+                        VR=vmax;
                     }else{
                         Log.i(TAG, String.format("A Clockwise scroll"));
                         //stop
-                        radius=rmax;
-                        velocity=0;
+                        VL=0;
+                        VR=0;
                     }
                 }
                 if(socketService!=null) {
                     try {
-                        socketService.sendCommand(ConvertCommand((float)velocity,(float)radius));
+                        String signL=(VL<=0) ? "1" : "0";
+                        String signR=(VR<=0) ? "1" : "0";
+                        socketService.sendCommand(signL+String.format("%1$04d", abs(VL))+signR+String.format("%1$04d", abs(VR))+';');
                     }catch (Exception er){er.printStackTrace();}
                 }
             }
@@ -144,21 +146,5 @@ public class GestureActivity extends AppCompatActivity  implements
     }
     public static double angle(Point a,Point center) {
         return Math.atan2(a.x-center.x, a.y-center.y);
-    }
-
-    public String ConvertCommand(float speed,float radius){
-        //VL=Vc(1-L/2r)
-        //VR=Vc(1+L/2r)
-        radius=radius/100;
-        float Vc=speed*0.8f;
-        float VL_f=Vc*(1-1.2f/(2*radius));
-        float VR_f=Vc*(1+1.2f/(2*radius));
-        int VL=(int)(abs(VL_f));
-        int VR=(int)(abs(VR_f));
-        char sign;
-        if (Vc>0) sign='0';
-        else sign='1';
-        String out=""+sign+String.format("%1$04d", VL)+sign+String.format("%1$04d", VR)+';';
-        return out;
     }
 }
