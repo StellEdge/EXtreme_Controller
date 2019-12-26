@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.ContactsContract;
-import android.support.v4.content.res.ConfigurationHelper;
 import android.util.Log;
 
 import java.io.DataInputStream;
@@ -14,12 +12,12 @@ import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ResourceBundle;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class SocketService extends Service {
     private final String TAG="SocketService";
     private boolean isServiceConnect=true;
     private byte flag=(byte)0xee;
+    private Socket client;
     private DataInputStream in;
     private DataOutputStream out;
     private UniqueImage uniqueImage=new UniqueImage();
@@ -83,12 +81,26 @@ public class SocketService extends Service {
         this.onReceiveImageListener=onReceiveImageListener;
     }
 
+    public void sendCommand(final String command){
+        new Thread() {
+            public void run() {
+                try {
+                    if(client.isOutputShutdown())
+                        return;
+                    out.writeByte(flag);
+                    out.writeLong(command.getBytes().length);
+                    out.write(command.getBytes());
+                } catch (Exception e) { e.printStackTrace(); }
+            }
+        }.start();
+    }
+
     private class Server implements Runnable{
         @Override
         public void run(){
             try{
                 ServerSocket serverSocket;
-                Socket client=null;
+                client=null;
                 serverSocket=new ServerSocket(12345);
                 Log.e(TAG,"serverSocket create");
                 while(isServiceConnect&&client==null){
@@ -97,20 +109,21 @@ public class SocketService extends Service {
                 in=new DataInputStream(client.getInputStream());
                 out=new DataOutputStream(client.getOutputStream());
                 Log.e("client","linked");
+                int index=0;
                 while(isServiceConnect&&client.isConnected()){
                     if(in.readByte()==flag){
+                        uniqueImage.data=null;
                         uniqueImage.size=in.readLong();
-                        Log.e("data length:", Long.toString(uniqueImage.size));
-                        if (uniqueImage.size < 0 || uniqueImage.size > 100000000)
+                        //Log.e("data length:", Long.toString(uniqueImage.size));
+                        if (uniqueImage.size <= 0 || uniqueImage.size > 100000000)
+                            continue;
+                        index=(index+1)%2;
+                        if(index==0)
                             continue;
                         uniqueImage.data = new byte[(int) uniqueImage.size];
-                        Log.e("msg", "finish");
                         in.read(uniqueImage.data);
-                        if (uniqueImage.data.equals("break")) {
-                            in.close();
-                            out.close();
-                            client.close();
-                            break;
+                        if(onReceiveImageListener==null) {
+                            continue;
                         }
                         try {
                             onReceiveImageListener.receiveImage(uniqueImage);

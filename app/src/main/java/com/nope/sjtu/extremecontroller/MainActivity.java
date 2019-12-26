@@ -2,7 +2,6 @@ package com.nope.sjtu.extremecontroller;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
@@ -11,41 +10,22 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.hardware.camera2.CameraManager;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-//import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.RadioButton;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.Math;
-import java.net.ServerSocket;
-import java.net.Socket;
-
-import static java.lang.Math.PI;
 import static java.lang.Math.abs;
-import static java.lang.Math.floor;
+
+//import android.support.v4.app.ActivityCompat;
 
 public class MainActivity extends AppCompatActivity {
     int widthPixels;//屏幕尺寸
@@ -148,8 +128,9 @@ public class MainActivity extends AppCompatActivity {
                     uniqueImage.size=uniqueImageS.size;
                     uniqueImage.data=new byte[(int)uniqueImage.size];
                     uniqueImage.data=uniqueImageS.data;
-                    Log.e("listen canvas","update");
                     Bitmap img = BitmapUtils.BytestoBitmap(uniqueImage.data, null);
+                    if(img==null)
+                        return;
                     final Canvas canvas = cam_receive.lockCanvas(null);
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);// 清空画布
                     Paint paint = new Paint();
@@ -196,6 +177,12 @@ public class MainActivity extends AppCompatActivity {
         cam_cap.closeCamera();
         super.onPause();
     }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        unbindService(conn);
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -239,8 +226,9 @@ public class MainActivity extends AppCompatActivity {
          * Called when the user touches the button
          */
 
-        calculate(mlocation);
-        BluetoothSend(" ",ConvertCommand(this.speed, this.radius));
+        calculate(mlocation);//TODO
+        socketService.sendCommand(ConvertCommand(this.speed, this.radius));
+        //BluetoothSend(" ",ConvertCommand(this.speed, this.radius));
         return true;
     }
 

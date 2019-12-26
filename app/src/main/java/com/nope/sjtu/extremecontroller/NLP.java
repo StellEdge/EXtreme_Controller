@@ -3,11 +3,17 @@ package com.nope.sjtu.extremecontroller;
 
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -25,6 +31,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static java.lang.Math.abs;
+
 public class NLP extends AppCompatActivity implements com.baidu.speech.EventListener {
     protected TextView txtResult;
     protected Button btn;
@@ -35,7 +43,7 @@ public class NLP extends AppCompatActivity implements com.baidu.speech.EventList
     private float vmax = 255;
     private float rmax = 255;
 
-
+    SocketService socketService;
 
 
     private void start(){
@@ -80,6 +88,9 @@ public class NLP extends AppCompatActivity implements com.baidu.speech.EventList
                 return true;
             }
         });
+
+        final Intent intent=new Intent(this,SocketService.class);
+        bindService(intent,conn, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -91,6 +102,7 @@ public class NLP extends AppCompatActivity implements com.baidu.speech.EventList
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unbindService(conn);
         asr.send(SpeechConstant.ASR_CANCEL, "{}", null, 0, 0);
         asr.unregisterListener(this);//退出事件管理器
         // 必须与registerListener成对出现，否则可能造成内存泄露
@@ -140,6 +152,15 @@ public class NLP extends AppCompatActivity implements com.baidu.speech.EventList
                 v = 0;
                 txtResult.append((String.format("\nV:%f, R:%f",v, r)));
             }
+            else{
+                return;
+            }
+
+            if(socketService!=null) {
+                try {
+                    socketService.sendCommand(ConvertCommand((float)v,(float)r));
+                }catch (Exception er){er.printStackTrace();}
+            }
         }
     }
     private void initView() {
@@ -175,5 +196,32 @@ public class NLP extends AppCompatActivity implements com.baidu.speech.EventList
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         // 此处为android 6.0以上动态授权的回调，用户自行实现。
     }
+
+    public String ConvertCommand(float speed,float radius){
+        //VL=Vc(1-L/2r)
+        //VR=Vc(1+L/2r)
+        float Vc=speed*0.8f;
+        float VL_f=Vc*(1-1.2f/(2*radius));
+        float VR_f=Vc*(1+1.2f/(2*radius));
+        int VL=(int)(abs(VL_f));
+        int VR=(int)(abs(VR_f));
+        char sign;
+        if (Vc>0) sign='0';
+        else sign='1';
+        String out=""+sign+String.format("%1$04d", VL)+sign+String.format("%1$04d", VR)+';';
+        return out;
+    }
+
+    ServiceConnection conn=new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            //返回一个Service对象
+            socketService = ((SocketService.SocketServiceBinder)service).getService();
+        }
+    };
 
 }

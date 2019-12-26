@@ -6,12 +6,15 @@ package com.nope.sjtu.extremecontroller;
  */
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.*;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Camera;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -19,20 +22,15 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
-
-
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
-import android.app.Activity;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
-import android.graphics.SurfaceTexture;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -254,7 +252,7 @@ public class camera_capture {
             }
 
             //抛出去展示或存储。
-            Log.d(TAG,"New data ready");
+            //Log.d(TAG,"New data ready");
             //一定需要close，否则不会收到新的Image回调。
             image.close();
         }
