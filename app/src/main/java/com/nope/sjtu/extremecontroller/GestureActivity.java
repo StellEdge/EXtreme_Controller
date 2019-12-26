@@ -149,6 +149,7 @@ public class GestureActivity extends AppCompatActivity  implements
     public String ConvertCommand(float speed,float radius){
         //VL=Vc(1-L/2r)
         //VR=Vc(1+L/2r)
+        radius=radius/100;
         float Vc=speed*0.8f;
         float VL_f=Vc*(1-1.2f/(2*radius));
         float VR_f=Vc*(1+1.2f/(2*radius));

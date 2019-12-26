@@ -37,11 +37,14 @@ public class MainActivity extends AppCompatActivity {
     public float cx=500 , cy =this.heightPixels/2;
 
     Location mlocation = new Location();
+
+    /*
     private BluetoothSPP bt = new BluetoothSPP(this);
     private boolean BTavailable;
     private String BT="Bluetooth";
+    */
 
-    private String TAG="Main Activity";
+    private String TAG="Axis Activity";
     private static Handler serverHandler=new Handler();
     /**
      * here starts camera part
@@ -59,9 +62,9 @@ public class MainActivity extends AppCompatActivity {
     };
     private TextView teller;
     public Axis axis;
-    private TextureView cam_preview;
+    //private TextureView cam_preview;
     private TextureView cam_receive;
-    private camera_capture cam_cap;
+    //private camera_capture cam_cap;
     SocketService socketService;
     UniqueImage uniqueImage;
     @Override
@@ -72,10 +75,12 @@ public class MainActivity extends AppCompatActivity {
         //paintBoard = new PaintBoard(this);
         canvas = new Canvas();
         axis = findViewById(R.id.axis);
-        BluetoothOpen();
+        //BluetoothOpen();
 
         teller = (TextView)findViewById(R.id.teller);
         teller.setText("temp");
+
+        /*
         Button button_start = findViewById(R.id.button_start);
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -83,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 //
             }
         });
-        //TODO:四个按钮的监听函数
+
         Button button_bluetooth = findViewById(R.id.button_bluetooth);
         button_bluetooth.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,12 +102,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        */
+
         measure();
 
         //find view by ID 在oncreate中使用比较好。
-        cam_preview=findViewById(R.id.camera_preview);
+        //cam_preview=findViewById(R.id.camera_preview);
         cam_receive=findViewById(R.id.camera_receive);
-        cam_cap=new camera_capture(this);
+        //cam_cap=new camera_capture(this);
 
         //测试service socket通信
         uniqueImage=new UniqueImage();
@@ -159,6 +166,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
     @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        unbindService(conn);
+    }
+    /*@Override
     protected void onResume(){
         super.onResume();
         Log.d(TAG,"On Resume");
@@ -177,35 +189,30 @@ public class MainActivity extends AppCompatActivity {
         cam_cap.closeCamera();
         super.onPause();
     }
-
-    @Override
-    protected void onDestroy(){
-        super.onDestroy();
-        unbindService(conn);
-    }
-    @Override
+@Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (data == null) { //判断数据是否为空
             return;
         }
 
-        if(requestCode == BluetoothState.REQUEST_CONNECT_DEVICE) {
-            if(resultCode == RESULT_OK){
-                String address = data.getExtras().getString(BluetoothState.EXTRA_DEVICE_ADDRESS);
-                bt.connect(address);
-            }
-        } else if(requestCode == BluetoothState.REQUEST_ENABLE_BT) {
-            if(resultCode == RESULT_OK) {
-                bt.setupService();
-                //bt.startService(BluetoothState.DEVICE_ANDROID);这里用的是HC-06
-                bt.startService(BluetoothState.DEVICE_OTHER);
-                //setup();
-            } else {
-                // Do something if user doesn't choose any device (Pressed back)
-            }
+    if(requestCode == BluetoothState.REQUEST_CONNECT_DEVICE) {
+        if(resultCode == RESULT_OK){
+            String address = data.getExtras().getString(BluetoothState.EXTRA_DEVICE_ADDRESS);
+            bt.connect(address);
+        }
+    } else if(requestCode == BluetoothState.REQUEST_ENABLE_BT) {
+        if(resultCode == RESULT_OK) {
+            bt.setupService();
+            //bt.startService(BluetoothState.DEVICE_ANDROID);这里用的是HC-06
+            bt.startService(BluetoothState.DEVICE_OTHER);
+            //setup();
+        } else {
+            // Do something if user doesn't choose any device (Pressed back)
         }
     }
+}
+*/
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch(event.getAction()) {
@@ -229,10 +236,22 @@ public class MainActivity extends AppCompatActivity {
         calculate(mlocation);//TODO
         socketService.sendCommand(ConvertCommand(this.speed, this.radius));
         //BluetoothSend(" ",ConvertCommand(this.speed, this.radius));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (radius >= 2000) {
+                    temp = "speed:" + speed + ", radius:" + "66666";
+                }
+                else{
+                    temp = "speed:" + speed + ", radius:" + radius;}
+                Log.d("hello", temp);
+                mhandler.sendMessage(mhandler.obtainMessage(0,temp));
+            }
+        }).start();
         return true;
     }
 
-    //李桐：下面是计算速度,对应圆盘操作模式,更新this.speed和this.radius
+
     private void calculate(Location mlocation){
         double centerx = 500;
         double centery = this.heightPixels/2;
@@ -277,71 +296,7 @@ public class MainActivity extends AppCompatActivity {
         axis.SetAxis((int)cx,(int)cy);
     }
 
-    // Created by hd on 2018/4/30.
-
-    private String Hexa(int num) {
-        if (num < 0)
-        {
-            return Integer.toHexString(num).substring(4);
-        }
-        String str = Integer.toHexString(num);
-        while (str.length()<4)
-        {
-            str = "0" + str;
-        }
-        return str;
-    }
-    // 这个是我自己为了算数用的函数，真.private，不要调用
-
-    private String CirSend(int v, int r){
-        if(r == 0) {
-            r = 1;
-        }
-        if (r>2000) {
-            r = 32768;
-        }
-        if (r<-2000) {
-            r = 32767;
-        }
-        String Hexstrv=Hexa(v);
-        String Hexstrr=Hexa(r);
-        String str = "89 " + Hexstrv.substring(0,2)+" "+Hexstrv.substring(2)
-                +" "+Hexstrr.substring(0,2)+" "+Hexstrr.substring(2);
-
-        str = str.toUpperCase();
-        return str;
-    }
-    //这个返回大写十六进制command，对应圆形UI界面
-
-    private String LinSend(int right, int left){
-        String Hexstrl=Hexa(left);
-        String Hexstrr=Hexa(right);
-        String str = "91" +" "+Hexstrr.substring(0,2)+" "+Hexstrr.substring(2)
-                +" "+Hexstrl.substring(0,2)+" "+Hexstrl.substring(2);
-        str = str.toUpperCase();
-        return str;
-    }
-    //这个返回大写十六进制command，对应双轮条形UI界面
-    //StellEdge：不存在的
-    void BluetoothOpen(){
-        if(!bt.isBluetoothAvailable()) {
-            BTavailable=false;
-            //Log.d(BT, "onCreate: NO BLUETOOTH SUPPORT");
-        } else {
-            BTavailable=true;
-            bt.setupService();
-            bt.startService(BluetoothState.DEVICE_OTHER);
-            if(!bt.isBluetoothEnabled()) {
-                bt.enable();
-            }
-        }
-        //文本接收
-        bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
-            public void onDataReceived(byte[] data, String message) {
-                // Do something when data incoming
-            }
-        });
-    }
+/*
     void BluetoothSend(String tag,String commandline){
         //tag目前就是多留个接口
         //直接调用这个函数来进行蓝牙数据发送
@@ -355,26 +310,8 @@ public class MainActivity extends AppCompatActivity {
         }else{
             Log.d(TAG, "BluetoothSend:No bluetooth connection.");
         }
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (radius >= 2000) {
-                    temp = "speed:" + speed + ", radius:" + "66666";
-                }
-                else{
-                    temp = "speed:" + speed + ", radius:" + radius;}
-                Log.d("hello", temp);
-                mhandler.sendMessage(mhandler.obtainMessage(0,temp));
-                //这里的操作是为了节约构造对象的内存开销
-                /*try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
-            }
-        }).start();
     }
+    */
     private final float car_width=11.2f;
     private final float voltage_correction=0.8f;
     public String ConvertCommand(float speed,float radius){
@@ -390,31 +327,6 @@ public class MainActivity extends AppCompatActivity {
         else sign='1';
         String out=""+sign+String.format("%1$04d", VL)+sign+String.format("%1$04d", VR)+';';
         return out;
-    }
-    //StellEdge:16进制byte字符串转byte编码
-    public static byte[] HexCommandtoByte(byte[] data) {
-        if (data == null) {
-            return null;
-        }
-        int nLength = data.length;
-        String TemString = new String(data, 0, nLength);
-        String[] strings = TemString.split(" ");
-        nLength = strings.length;
-        data = new byte[nLength];
-
-        for (int i = 0; i < nLength; i++) {
-            if (strings[i].length() != 2) {
-                data[i] = 00;
-                continue;
-            }
-            try {
-                data[i] = (byte)Integer.parseInt(strings[i], 16);
-            } catch (Exception e) {
-                data[i] = 00;
-                continue;
-            }
-        }
-        return data;
     }
 }
 
